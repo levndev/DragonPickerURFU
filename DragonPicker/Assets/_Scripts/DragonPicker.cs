@@ -19,16 +19,29 @@ public class DragonPicker : MonoBehaviour
     public float EnegyShieldRadius = 1.5f;
     private bool FirstLaunch = true;
     public List<GameObject> shieldList;
+    private int score;
+    public TextMeshProUGUI scoreGT;
+
     void Start()
     {
+        var scoreGO = GameObject.Find("Score");
+        scoreGT = scoreGO.GetComponent<TextMeshProUGUI>();
+        scoreGT.text = "0";
         shieldList = new List<GameObject>();
         for (var i = 1; i <= EnergyShieldAmount; i++)
         {
             var tShieldGo = Instantiate(EnergyShieldPrefab);
             tShieldGo.transform.position = new Vector3(0, EnegyShieldBottomY, 0);
             tShieldGo.transform.localScale = new Vector3(1 * i, 1 * i, 1 * i);
+            tShieldGo.GetComponent<EnergyShield>().EggCaught += DragonEggCaught;
             shieldList.Add(tShieldGo);
         }
+    }
+
+    public void DragonEggCaught()
+    {
+        score++;
+        scoreGT.text = score.ToString();
     }
 
     public void DragonEggDestroyed()

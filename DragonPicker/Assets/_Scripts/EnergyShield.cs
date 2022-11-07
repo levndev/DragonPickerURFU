@@ -3,15 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System;
+
 public class EnergyShield : MonoBehaviour
 {
-    public TextMeshProUGUI scoreGT;
-    private int score;
+    public Action EggCaught;
+    private AudioSource audioSource;
     private void Start()
     {
-        var scoreGO = GameObject.Find("Score");
-        scoreGT = scoreGO.GetComponent<TextMeshProUGUI>();
-        scoreGT.text = "0";
+        audioSource = GetComponent<AudioSource>();
     }
     void Update()
     {
@@ -29,8 +29,8 @@ public class EnergyShield : MonoBehaviour
         if (collided.tag == "Dragon Egg")
         {
             Destroy(collided);
-            score++;
-            scoreGT.text = score.ToString();
+            EggCaught?.Invoke();
+            audioSource.Play();
         }
     }
 }

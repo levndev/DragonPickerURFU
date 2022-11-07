@@ -5,6 +5,13 @@ using UnityEngine;
 public class DragonEgg : MonoBehaviour
 {
     public static float BottomY = -30;
+    public AudioSource audioSource;
+
+    private void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
+
     void Update()
     {
         if (transform.position.y < BottomY)
@@ -22,5 +29,6 @@ public class DragonEgg : MonoBehaviour
         em.enabled = true;
         var rend = GetComponent<Renderer>();
         rend.enabled = false;
+        audioSource.Play();
     }
 }
