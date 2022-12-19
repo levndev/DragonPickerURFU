@@ -11,6 +11,7 @@ public class Settings : MonoBehaviour
     public Slider MasterSlider;
     public Slider SFXSlider;
     public Slider MusicSlider;
+
     public void MasterVolumeChanged()
     {
         audioMixer.SetFloat("MasterVolume", Mathf.Log10(MasterSlider.value) * 20);
@@ -27,6 +28,15 @@ public class Settings : MonoBehaviour
         PlayerPrefs.SetFloat("MusicVolume", MusicSlider.value);
     }
 
+    public void LoadData()
+    {
+        if (PlayerPrefs.HasKey("MasterVolume"))
+            audioMixer.SetFloat("MasterVolume", Mathf.Log10(PlayerPrefs.GetFloat("MasterVolume")) * 20);
+        if (PlayerPrefs.HasKey("SFXVolume"))
+            audioMixer.SetFloat("SFXVolume", Mathf.Log10(PlayerPrefs.GetFloat("SFXVolume")) * 20);
+        if (PlayerPrefs.HasKey("MusicVolume"))
+            audioMixer.SetFloat("MusicVolume", Mathf.Log10(PlayerPrefs.GetFloat("MusicVolume")) * 20);
+    }
     private void OnEnable()
     {
         if (PlayerPrefs.HasKey("MasterVolume"))

@@ -11,22 +11,24 @@ using System.Linq;
 
 public class DragonPicker : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI TestText;
-    [SerializeField] private UnityEvent authorizationCheck;
     public GameObject EnergyShieldPrefab;
     public int EnergyShieldAmount = 3;
     public float EnegyShieldBottomY = -6;
     public float EnegyShieldRadius = 1.5f;
-    private bool FirstLaunch = true;
     public List<GameObject> shieldList;
     private int score;
     public TextMeshProUGUI scoreGT;
-
+    public TextMeshProUGUI healthText;
+    private int healthLeft;
+    private bool paused = false;
+    public GameObject PausePanel;
+    public TextMeshProUGUI PlayerNameText;
+    public TextMeshProUGUI HighScoreText;
     void Start()
     {
         var scoreGO = GameObject.Find("Score");
         scoreGT = scoreGO.GetComponent<TextMeshProUGUI>();
-        scoreGT.text = "0";
+        scoreGT.text = $"Score: 0";
         shieldList = new List<GameObject>();
         for (var i = 1; i <= EnergyShieldAmount; i++)
         {
@@ -36,12 +38,57 @@ public class DragonPicker : MonoBehaviour
             tShieldGo.GetComponent<EnergyShield>().EggCaught += DragonEggCaught;
             shieldList.Add(tShieldGo);
         }
+        healthLeft = EnergyShieldAmount;
+        healthText.text = "HP: " + healthLeft.ToString();
+        if (YGManager.IsAuthorized)
+        {
+            PlayerNameText.text = YandexGame.playerName;
+            HighScoreText.text = $"High score: {YandexGame.savesData.HighScore}";
+        }
+        else
+        {
+            PlayerNameText.text = "Anon";
+            HighScoreText.text = "";
+        }
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            TogglePause();
+        }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (paused)
+                TogglePause();
+            Quit();
+        }
+    }
+
+    public void TogglePause()
+    {
+        paused = !paused;
+        if (paused)
+        {
+            Time.timeScale = 0;
+            PausePanel.SetActive(true);
+        }
+        else
+        {
+            Time.timeScale = 1;
+            PausePanel.SetActive(false);
+        }
     }
 
     public void DragonEggCaught()
     {
         score++;
-        scoreGT.text = score.ToString();
+        if (score >= 20)
+        {
+            AchievementManager.Instance.CompleteAchievement(2);
+        }
+        scoreGT.text = $"Score: {score}";
     }
 
     public void DragonEggDestroyed()
@@ -54,33 +101,28 @@ public class DragonPicker : MonoBehaviour
         var shield = shieldList.Last();
         shieldList.Remove(shield);
         Destroy(shield);
+        healthLeft--;
+        healthText.text = "HP: " + healthLeft.ToString();
         if (shieldList.Count == 0)
         {
-            SceneManager.LoadScene("_0Scene");
+            AchievementManager.Instance.CompleteAchievement(1);
+            YandexGame.RewVideoShow(0);
+            Quit();
         }
     }
 
-    public void ResolvedAuthorization()
+    private void Quit()
     {
-        TestText.text = $"SDK подключен. Игрок : \"{YandexGame.playerName}\"";
-    }
-
-    public void RejectedAuthorization()
-    {
-        TestText.text = $"SDK подключен. Авторизация провалена";
-    }
-
-    private void OnEnable() => YandexGame.GetDataEvent += SdkDataReceived;
-
-    private void OnDisable() => YandexGame.GetDataEvent -= SdkDataReceived;
-
-    private void SdkDataReceived()
-    {
-        if (YandexGame.SDKEnabled && FirstLaunch)
+        if (score > YandexGame.savesData.HighScore)
         {
-            TestText.text = $"SDK подключен. Авторизация...";
-            authorizationCheck?.Invoke();
-            FirstLaunch = false;
+            if (YandexGame.savesData.HighScore != 0)
+            {
+                AchievementManager.Instance.CompleteAchievement(0);
+            }
+            YandexGame.savesData.HighScore = score;
+            YandexGame.SaveProgress();
+            YandexGame.NewLeaderboardScores("TOPPlayerScore", score);
         }
+        SceneManager.LoadScene("_0Scene");
     }
 }
